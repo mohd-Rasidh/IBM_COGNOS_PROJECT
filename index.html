@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SwiftRoute Logistics — Fleet Intelligence Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c14;
+    --bg2: #0d1422;
+    --bg3: #111b2e;
+    --card: #0f1928;
+    --card2: #162035;
+    --border: #1e3050;
+    --accent: #f97316;
+    --accent2: #fb923c;
+    --blue: #3b82f6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --glow: rgba(249,115,22,0.15);
+    --glowb: rgba(59,130,246,0.12);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden; }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    position:fixed; inset:0; z-index:1000;
+    background:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .login-bg {
+    position:absolute; inset:0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(249,115,22,.08) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 50% at 80% 100%, rgba(59,130,246,.06) 0%, transparent 60%);
+  }
+  .login-grid {
+    position:absolute; inset:0; opacity:.04;
+    background-image: linear-gradient(var(--border) 1px, transparent 1px),
+                      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size:40px 40px;
+  }
+  .login-particles { position:absolute; inset:0; overflow:hidden; }
+  .particle {
+    position:absolute; border-radius:50%;
+    background:var(--accent); opacity:0;
+    animation:float-particle 6s infinite;
+  }
+  @keyframes float-particle {
+    0%{opacity:0;transform:translateY(100vh) scale(0)}
+    10%{opacity:.6}
+    90%{opacity:.2}
+    100%{opacity:0;transform:translateY(-10vh) scale(1)}
+  }
+
+  .login-box {
+    position:relative; z-index:2;
+    width:420px;
+    background:linear-gradient(145deg,var(--bg2),var(--bg3));
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:44px 40px;
+    box-shadow:0 0 60px rgba(249,115,22,.1), 0 40px 80px rgba(0,0,0,.4);
+    animation:login-appear .6s cubic-bezier(.175,.885,.32,1.275);
+  }
+  @keyframes login-appear {
+    from{opacity:0;transform:translateY(40px) scale(.95)}
+    to{opacity:1;transform:none}
+  }
+  .login-logo {
+    display:flex; align-items:center; gap:12px; margin-bottom:32px;
+  }
+  .logo-icon {
+    width:48px;height:48px; border-radius:12px;
+    background:linear-gradient(135deg,var(--accent),#c2410c);
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px; box-shadow:0 0 20px rgba(249,115,22,.4);
+  }
+  .logo-text { font-family:'Rajdhani',sans-serif; }
+  .logo-text h1 { font-size:22px; font-weight:700; color:var(--text); letter-spacing:.5px; }
+  .logo-text p { font-size:11px; color:var(--text3); letter-spacing:2px; text-transform:uppercase; }
+  .login-title { font-family:'Rajdhani',sans-serif; font-size:26px; font-weight:600; margin-bottom:6px; }
+  .login-sub { color:var(--text2); font-size:13px; margin-bottom:28px; }
+  .field-group { margin-bottom:18px; }
+  .field-group label { display:block; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text3); margin-bottom:7px; }
+  .field-group input {
+    width:100%; padding:12px 16px;
+    background:var(--bg); border:1px solid var(--border); border-radius:10px;
+    color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px;
+    outline:none; transition:all .2s;
+  }
+  .field-group input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--glow); }
+  .login-btn {
+    width:100%; padding:13px;
+    background:linear-gradient(135deg,var(--accent),#ea580c);
+    border:none; border-radius:10px;
+    color:#fff; font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700;
+    letter-spacing:1px; cursor:pointer; margin-top:8px;
+    transition:all .2s; position:relative; overflow:hidden;
+  }
+  .login-btn::after {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(135deg,rgba(255,255,255,.1),transparent);
+    opacity:0; transition:opacity .2s;
+  }
+  .login-btn:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(249,115,22,.4); }
+  .login-btn:hover::after { opacity:1; }
+  .login-hint { text-align:center; color:var(--text3); font-size:12px; margin-top:20px; }
+  .login-hint span { color:var(--accent); }
+  .login-error { background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); border-radius:8px; padding:10px 14px; font-size:13px; color:var(--red); margin-bottom:16px; display:none; }
+
+  /* ── MAIN APP ── */
+  #app { display:none; min-height:100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width:240px; height:100vh; position:fixed; left:0; top:0;
+    background:var(--bg2); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; z-index:100;
+  }
+  .sidebar-logo {
+    padding:24px 20px 20px;
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:10px;
+  }
+  .sidebar-logo .logo-icon { width:38px;height:38px;border-radius:9px;font-size:17px; }
+  .sidebar-logo .logo-text h1 { font-size:17px; }
+  .sidebar-logo .logo-text p { font-size:9px; }
+  nav { flex:1; padding:16px 12px; }
+  .nav-section { margin-bottom:24px; }
+  .nav-section-title { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); padding:0 8px; margin-bottom:8px; }
+  .nav-item {
+    display:flex; align-items:center; gap:10px;
+    padding:9px 10px; border-radius:9px; cursor:pointer;
+    font-size:13.5px; color:var(--text2); transition:all .15s;
+    margin-bottom:2px;
+  }
+  .nav-item:hover { background:var(--card); color:var(--text); }
+  .nav-item.active { background:rgba(249,115,22,.12); color:var(--accent); border:1px solid rgba(249,115,22,.2); }
+  .nav-item .icon { font-size:16px; width:20px; text-align:center; }
+  .sidebar-footer { padding:16px; border-top:1px solid var(--border); }
+  .user-badge {
+    display:flex; align-items:center; gap:10px;
+    background:var(--card); border-radius:10px; padding:10px 12px;
+  }
+  .user-avatar { width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#c2410c);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700; }
+  .user-info { flex:1; }
+  .user-info .name { font-size:12.5px; font-weight:500; }
+  .user-info .role { font-size:10px; color:var(--text3); }
+  .logout-btn { cursor:pointer; color:var(--text3); font-size:14px; transition:color .2s; }
+  .logout-btn:hover { color:var(--red); }
+
+  /* MAIN CONTENT */
+  .main { margin-left:240px; min-height:100vh; }
+  .topbar {
+    padding:16px 28px; border-bottom:1px solid var(--border);
+    background:var(--bg2); display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:50;
+  }
+  .topbar-left h2 { font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:600; }
+  .topbar-left p { font-size:12px; color:var(--text3); }
+  .topbar-right { display:flex; align-items:center; gap:12px; }
+  .filter-group { display:flex; align-items:center; gap:8px; }
+  .filter-select {
+    background:var(--card); border:1px solid var(--border); border-radius:8px;
+    color:var(--text); padding:7px 12px; font-size:12px; font-family:'DM Sans',sans-serif;
+    outline:none; cursor:pointer; transition:border-color .2s;
+  }
+  .filter-select:focus { border-color:var(--accent); }
+  .refresh-btn {
+    background:var(--card); border:1px solid var(--border); border-radius:8px;
+    color:var(--text2); padding:7px 14px; font-size:12px; cursor:pointer;
+    transition:all .2s; display:flex; align-items:center; gap:6px;
+  }
+  .refresh-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+  .content { padding:24px 28px; }
+
+  /* PAGES */
+  .page { display:none; }
+  .page.active { display:block; animation:fadein .3s; }
+  @keyframes fadein { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+
+  /* KPI TILES */
+  .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+  .kpi-card {
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:20px; position:relative; overflow:hidden; transition:transform .2s, box-shadow .2s;
+  }
+  .kpi-card:hover { transform:translateY(-3px); box-shadow:0 12px 32px rgba(0,0,0,.3); }
+  .kpi-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  }
+  .kpi-card.orange::before { background:linear-gradient(90deg,var(--accent),transparent); }
+  .kpi-card.blue::before { background:linear-gradient(90deg,var(--blue),transparent); }
+  .kpi-card.green::before { background:linear-gradient(90deg,var(--green),transparent); }
+  .kpi-card.red::before { background:linear-gradient(90deg,var(--red),transparent); }
+  .kpi-card.amber::before { background:linear-gradient(90deg,var(--amber),transparent); }
+  .kpi-glow {
+    position:absolute; top:-20px; right:-20px; width:80px; height:80px;
+    border-radius:50%; opacity:.08;
+  }
+  .kpi-card.orange .kpi-glow { background:var(--accent); }
+  .kpi-card.blue .kpi-glow { background:var(--blue); }
+  .kpi-card.green .kpi-glow { background:var(--green); }
+  .kpi-card.red .kpi-glow { background:var(--red); }
+  .kpi-card.amber .kpi-glow { background:var(--amber); }
+  .kpi-icon { font-size:22px; margin-bottom:10px; }
+  .kpi-val { font-family:'Rajdhani',sans-serif; font-size:32px; font-weight:700; line-height:1; margin-bottom:4px; }
+  .kpi-card.orange .kpi-val { color:var(--accent); }
+  .kpi-card.blue .kpi-val { color:var(--blue); }
+  .kpi-card.green .kpi-val { color:var(--green); }
+  .kpi-card.red .kpi-val { color:var(--red); }
+  .kpi-card.amber .kpi-val { color:var(--amber); }
+  .kpi-label { font-size:12px; color:var(--text2); }
+  .kpi-delta { font-size:11px; margin-top:8px; }
+  .kpi-delta.up { color:var(--green); }
+  .kpi-delta.down { color:var(--red); }
+
+  /* CHART GRID */
+  .chart-row { display:grid; gap:16px; margin-bottom:16px; }
+  .chart-row.cols-2 { grid-template-columns:1fr 1fr; }
+  .chart-row.cols-3 { grid-template-columns:2fr 1fr 1fr; }
+  .chart-row.cols-1 { grid-template-columns:1fr; }
+  .chart-card {
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:20px; transition:box-shadow .2s;
+  }
+  .chart-card:hover { box-shadow:0 4px 20px rgba(0,0,0,.3); }
+  .chart-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .chart-title { font-family:'Rajdhani',sans-serif; font-size:15px; font-weight:600; }
+  .chart-sub { font-size:11px; color:var(--text3); margin-top:2px; }
+  .chart-badge {
+    font-size:10px; padding:3px 9px; border-radius:20px;
+    background:var(--card2); color:var(--text2); border:1px solid var(--border);
+  }
+  canvas { max-height:260px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x:auto; border-radius:10px; }
+  table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  thead tr { background:var(--bg3); }
+  th { padding:10px 14px; text-align:left; color:var(--text3); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; white-space:nowrap; }
+  td { padding:10px 14px; border-top:1px solid var(--border); white-space:nowrap; }
+  tr:hover td { background:var(--card2); }
+  .badge {
+    display:inline-block; padding:3px 9px; border-radius:20px;
+    font-size:10px; font-weight:600; letter-spacing:.5px;
+  }
+  .badge-green { background:rgba(34,197,94,.12); color:var(--green); border:1px solid rgba(34,197,94,.25); }
+  .badge-amber { background:rgba(245,158,11,.12); color:var(--amber); border:1px solid rgba(245,158,11,.25); }
+  .badge-red { background:rgba(239,68,68,.12); color:var(--red); border:1px solid rgba(239,68,68,.25); }
+  .badge-blue { background:rgba(59,130,246,.12); color:var(--blue); border:1px solid rgba(59,130,246,.25); }
+
+  /* STAR RATING */
+  .stars { color:var(--amber); letter-spacing:-2px; font-size:13px; }
+
+  /* PROGRESS BAR */
+  .progress-bar { height:6px; border-radius:3px; background:var(--bg3); overflow:hidden; margin-top:4px; }
+  .progress-fill { height:100%; border-radius:3px; transition:width .6s; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width:5px; height:5px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  /* PAGE SPECIFIC */
+  .section-title {
+    font-family:'Rajdhani',sans-serif; font-size:18px; font-weight:600;
+    margin-bottom:16px; display:flex; align-items:center; gap:8px;
+  }
+  .section-title::before { content:''; display:block; width:4px; height:20px; background:var(--accent); border-radius:2px; }
+
+  .stat-row { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+  .stat-mini {
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:14px; text-align:center;
+  }
+  .stat-mini .val { font-family:'Rajdhani',sans-serif; font-size:24px; font-weight:700; color:var(--accent); }
+  .stat-mini .lbl { font-size:11px; color:var(--text3); margin-top:2px; }
+
+  /* TOAST */
+  .toast {
+    position:fixed; bottom:24px; right:24px; z-index:9999;
+    background:var(--card2); border:1px solid var(--border); border-radius:12px;
+    padding:14px 20px; font-size:13px; display:flex; align-items:center; gap:10px;
+    box-shadow:0 8px 32px rgba(0,0,0,.4);
+    transform:translateY(80px); opacity:0; transition:all .3s;
+  }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast-icon { font-size:18px; }
+
+  /* ROUTE ANALYSIS */
+  .route-list { display:flex; flex-direction:column; gap:8px; }
+  .route-item {
+    display:flex; align-items:center; gap:12px;
+    background:var(--card2); border-radius:8px; padding:10px 14px;
+    border:1px solid var(--border);
+  }
+  .route-name { font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:600; min-width:80px; }
+  .route-bar-wrap { flex:1; }
+  .route-info { font-size:11px; color:var(--text3); min-width:60px; text-align:right; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-screen">
+  <div class="login-bg"></div>
+  <div class="login-grid"></div>
+  <div class="login-particles" id="particles"></div>
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-icon">🚚</div>
+      <div class="logo-text">
+        <h1>SwiftRoute</h1>
+        <p>Logistics Intelligence</p>
+      </div>
+    </div>
+    <div class="login-title">Fleet Command Center</div>
+    <div class="login-sub">Sign in to access the operations dashboard</div>
+    <div class="login-error" id="login-error">Invalid credentials. Try admin / swift2024</div>
+    <div class="field-group">
+      <label>Username</label>
+      <input type="text" id="username" placeholder="Enter your username" autocomplete="off">
+    </div>
+    <div class="field-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="••••••••">
+    </div>
+    <button class="login-btn" onclick="doLogin()">SIGN IN → DASHBOARD</button>
+    <p class="login-hint">Demo credentials: <span>admin</span> / <span>swift2024</span></p>
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🚚</div>
+      <div class="logo-text">
+        <h1>SwiftRoute</h1>
+        <p>Fleet Intelligence</p>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-section-title">Overview</div>
+        <div class="nav-item active" onclick="showPage('overview',this)"><span class="icon">📊</span> Dashboard</div>
+        <div class="nav-item" onclick="showPage('delivery',this)"><span class="icon">📦</span> Delivery Performance</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Fleet</div>
+        <div class="nav-item" onclick="showPage('fleet',this)"><span class="icon">🚛</span> Vehicle & Breakdown</div>
+        <div class="nav-item" onclick="showPage('driver',this)"><span class="icon">👤</span> Driver Analytics</div>
+        <div class="nav-item" onclick="showPage('route',this)"><span class="icon">🗺️</span> Route Analysis</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Business</div>
+        <div class="nav-item" onclick="showPage('client',this)"><span class="icon">🏢</span> Client SLA Report</div>
+        <div class="nav-item" onclick="showPage('fuel',this)"><span class="icon">⛽</span> Fuel & Efficiency</div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-badge">
+        <div class="user-avatar">FM</div>
+        <div class="user-info">
+          <div class="name">Fleet Manager</div>
+          <div class="role">Operations Admin</div>
+        </div>
+        <div class="logout-btn" onclick="doLogout()" title="Logout">⬡</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2 id="page-title">Operations Dashboard</h2>
+        <p id="page-sub">SwiftRoute Fleet Intelligence Platform · FY 2024</p>
+      </div>
+      <div class="topbar-right">
+        <div class="filter-group">
+          <select class="filter-select" id="f-industry" onchange="applyFilters()">
+            <option value="">All Industries</option>
+            <option>E-Commerce</option><option>Retail</option>
+            <option>FMCG</option><option>Grocery</option><option>Pharma</option>
+          </select>
+          <select class="filter-select" id="f-vehicle" onchange="applyFilters()">
+            <option value="">All Vehicles</option>
+            <option>Truck</option><option>Van</option><option>Bike</option>
+          </select>
+          <select class="filter-select" id="f-month" onchange="applyFilters()">
+            <option value="">All Months</option>
+            <option value="1">January</option><option value="2">February</option>
+            <option value="3">March</option><option value="4">April</option>
+            <option value="5">May</option><option value="6">June</option>
+            <option value="7">July</option><option value="8">August</option>
+            <option value="9">September</option><option value="10">October</option>
+            <option value="11">November</option><option value="12">December</option>
+          </select>
+        </div>
+        <button class="refresh-btn" onclick="showToast()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── OVERVIEW PAGE ── -->
+      <div class="page active" id="page-overview">
+        <div class="kpi-grid">
+          <div class="kpi-card orange">
+            <div class="kpi-glow"></div>
+            <div class="kpi-icon">📦</div>
+            <div class="kpi-val" id="kpi-total">200</div>
+            <div class="kpi-label">Total Shipments</div>
+            <div class="kpi-delta down">↓ Fleet-wide tracking active</div>
+          </div>
+          <div class="kpi-card green">
+            <div class="kpi-glow"></div>
+            <div class="kpi-icon">✅</div>
+            <div class="kpi-val" id="kpi-ontime">19.5%</div>
+            <div class="kpi-label">On-Time Rate</div>
+            <div class="kpi-delta down">↓ Below 85% SLA target</div>
+          </div>
+          <div class="kpi-card red">
+            <div class="kpi-glow"></div>
+            <div class="kpi-icon">🔧</div>
+            <div class="kpi-val" id="kpi-breakdown">40</div>
+            <div class="kpi-label">Breakdown Events</div>
+            <div class="kpi-delta down">↑ 20% of fleet affected</div>
+          </div>
+          <div class="kpi-card blue">
+            <div class="kpi-glow"></div>
+            <div class="kpi-icon">⛽</div>
+            <div class="kpi-val" id="kpi-fuel">₹24.8L</div>
+            <div class="kpi-label">Total Fuel Cost</div>
+            <div class="kpi-delta down">↑ High expenditure</div>
+          </div>
+          <div class="kpi-card amber">
+            <div class="kpi-glow"></div>
+            <div class="kpi-icon">⚡</div>
+            <div class="kpi-val">8.60</div>
+            <div class="kpi-label">Avg Fuel Efficiency (km/L)</div>
+            <div class="kpi-delta up">↑ Fleet average</div>
+          </div>
+          <div class="kpi-card red">
+            <div class="kpi-glow"></div>
+            <div class="kpi-icon">📉</div>
+            <div class="kpi-val">34.5%</div>
+            <div class="kpi-label">Failure Rate</div>
+            <div class="kpi-delta down">↓ Critical alert</div>
+          </div>
+          <div class="kpi-card orange">
+            <div class="kpi-glow"></div>
+            <div class="kpi-icon">🚗</div>
+            <div class="kpi-val">500</div>
+            <div class="kpi-label">Fleet Size</div>
+            <div class="kpi-delta up">Across 20 states</div>
+          </div>
+          <div class="kpi-card blue">
+            <div class="kpi-glow"></div>
+            <div class="kpi-icon">⭐</div>
+            <div class="kpi-val">2.95</div>
+            <div class="kpi-label">Avg Customer Rating</div>
+            <div class="kpi-delta down">↓ Below target 4.0</div>
+          </div>
+        </div>
+
+        <div class="chart-row cols-2">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div><div class="chart-title">Monthly Delivery Volume Trend</div><div class="chart-sub">Shipments by status across 2024</div></div>
+              <span class="chart-badge">2024</span>
+            </div>
+            <canvas id="chart-monthly"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div><div class="chart-title">Delivery Status Distribution</div><div class="chart-sub">Overall fleet performance</div></div>
+              <span class="chart-badge">200 Total</span>
+            </div>
+            <canvas id="chart-status-pie"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-row cols-2">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div><div class="chart-title">Shipments by Client</div><div class="chart-sub">Volume distribution across key accounts</div></div>
+            </div>
+            <canvas id="chart-client-bar"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div><div class="chart-title">Industry Breakdown</div><div class="chart-sub">Shipment share by sector</div></div>
+            </div>
+            <canvas id="chart-industry"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DELIVERY PERFORMANCE ── -->
+      <div class="page" id="page-delivery">
+        <div class="section-title">Delivery Performance Report</div>
+        <div class="chart-row cols-2" style="margin-bottom:16px">
+          <div class="chart-card">
+            <div class="chart-header"><div class="chart-title">On-Time vs Delayed vs Failed</div></div>
+            <canvas id="chart-delivery-stacked"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header"><div class="chart-title">Monthly On-Time Rate %</div></div>
+            <canvas id="chart-ontime-rate"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">Client SLA Compliance Table</div><div class="chart-sub">Conditional styling: Red &lt;85%, Amber 85–95%, Green &gt;95%</div></div>
+          <div class="table-wrap">
+            <table id="sla-table">
+              <thead><tr><th>Client Name</th><th>Industry</th><th>Total Shipments</th><th>On-Time</th><th>Delayed</th><th>Failed</th><th>SLA Compliance %</th><th>Status</th></tr></thead>
+              <tbody id="sla-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FLEET / VEHICLE ── -->
+      <div class="page" id="page-fleet">
+        <div class="section-title">Vehicle Breakdown & Damage Report</div>
+        <div class="stat-row">
+          <div class="stat-mini"><div class="val">40</div><div class="lbl">Total Breakdowns</div></div>
+          <div class="stat-mini"><div class="val">48</div><div class="lbl">Damage Events</div></div>
+          <div class="stat-mini"><div class="val">₹24.8L</div><div class="lbl">Fuel Cost Impact</div></div>
+        </div>
+        <div class="chart-row cols-2">
+          <div class="chart-card">
+            <div class="chart-header"><div class="chart-title">Breakdowns & Damages by Vehicle Type</div></div>
+            <canvas id="chart-vehicle-breakdown"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header"><div class="chart-title">Fuel Efficiency by Vehicle Type (km/L)</div></div>
+            <canvas id="chart-fuel-eff-vehicle"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">Vehicle Performance Summary</div><div class="chart-sub">Vehicles with Breakdown Count &gt;3 highlighted in Red</div></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Vehicle Type</th><th>Total Shipments</th><th>Breakdowns</th><th>Damage Events</th><th>Total Fuel Cost</th><th>Avg Fuel Efficiency</th><th>Alert</th></tr></thead>
+              <tbody>
+                <tr><td>🚐 Van</td><td>72</td><td><span style="color:var(--red);font-weight:600">17</span></td><td>22</td><td>₹8,51,234</td><td>8.79 km/L</td><td><span class="badge badge-red">HIGH RISK</span></td></tr>
+                <tr><td>🏍️ Bike</td><td>65</td><td><span style="color:var(--amber);font-weight:600">16</span></td><td>11</td><td>₹8,21,440</td><td>8.48 km/L</td><td><span class="badge badge-amber">MONITOR</span></td></tr>
+                <tr><td>🚚 Truck</td><td>63</td><td><span style="color:var(--green);font-weight:600">7</span></td><td>15</td><td>₹8,02,624</td><td>8.51 km/L</td><td><span class="badge badge-green">STABLE</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DRIVER ── -->
+      <div class="page" id="page-driver">
+        <div class="section-title">Driver Performance Analytics</div>
+        <div class="chart-row cols-2">
+          <div class="chart-card">
+            <div class="chart-header"><div class="chart-title">Driver Avg Customer Rating</div><div class="chart-sub">Scale: 1–5 stars</div></div>
+            <canvas id="chart-driver-rating"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header"><div class="chart-title">Driver On-Time Delivery Count</div></div>
+            <canvas id="chart-driver-ontime"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">Driver Leaderboard</div><div class="chart-sub">Performance ranked by customer rating and on-time deliveries</div></div>
+          <div class="table-wrap">
+            <table id="driver-table">
+              <thead><tr><th>Rank</th><th>Driver Name</th><th>Avg Experience</th><th>On-Time Deliveries</th><th>Failures</th><th>Avg Rating</th><th>Stars</th><th>Performance</th></tr></thead>
+              <tbody id="driver-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ROUTE ── -->
+      <div class="page" id="page-route">
+        <div class="section-title">Route Analysis — 40 Routes Across 20 States</div>
+        <div class="chart-row cols-2">
+          <div class="chart-card">
+            <div class="chart-header"><div class="chart-title">⚠️ Top Problem Routes (Failure Rate %)</div><div class="chart-sub">Routes with &gt;10% failure highlighted</div></div>
+            <div class="route-list" id="problem-routes"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header"><div class="chart-title">✅ Best Performing Routes</div><div class="chart-sub">Routes with 0% failure rate</div></div>
+            <div class="route-list" id="best-routes"></div>
+          </div>
+        </div>
+        <div class="chart-card" style="margin-top:16px">
+          <div class="chart-header"><div class="chart-title">Route-wise On-Time Delivery Rate (Top 15 Routes)</div></div>
+          <canvas id="chart-route-bar" style="max-height:320px"></canvas>
+        </div>
+      </div>
+
+      <!-- ── CLIENT SLA ── -->
+      <div class="page" id="page-client">
+        <div class="section-title">Client SLA Compliance Deep Dive</div>
+        <div class="chart-row cols-2">
+          <div class="chart-card">
+            <div class="chart-header"><div class="chart-title">SLA Compliance % by Client</div></div>
+            <canvas id="chart-sla-bar"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header"><div class="chart-title">Failed vs On-Time per Client</div></div>
+            <canvas id="chart-sla-stacked"></canvas>
+          </div>
+        </div>
+        <div class="chart-card" style="margin-top:0">
+          <div class="chart-header"><div class="chart-title">Industry-wise Delivery Status</div></div>
+          <canvas id="chart-industry-status"></canvas>
+        </div>
+      </div>
+
+      <!-- ── FUEL ── -->
+      <div class="page" id="page-fuel">
+        <div class="section-title">Fuel & Efficiency Analysis</div>
+        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="kpi-card blue"><div class="kpi-glow"></div><div class="kpi-icon">📏</div><div class="kpi-val">2,12,691</div><div class="kpi-label">Total Distance (km)</div></div>
+          <div class="kpi-card amber"><div class="kpi-glow"></div><div class="kpi-icon">🪣</div><div class="kpi-val">24,735 L</div><div class="kpi-label">Total Fuel Consumed</div></div>
+          <div class="kpi-card green"><div class="kpi-glow"></div><div class="kpi-icon">⚡</div><div class="kpi-val">8.60</div><div class="kpi-label">Fleet Avg Fuel Efficiency (km/L)</div></div>
+        </div>
+        <div class="chart-row cols-2">
+          <div class="chart-card">
+            <div class="chart-header"><div class="chart-title">Monthly Fuel Cost Trend</div></div>
+            <canvas id="chart-fuel-monthly"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header"><div class="chart-title">Fuel Efficiency vs Driver Experience</div><div class="chart-sub">Correlation analysis</div></div>
+            <canvas id="chart-exp-eff"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<div class="toast" id="toast">
+  <span class="toast-icon">✅</span>
+  <span>Data refreshed successfully</span>
+</div>
+
+<script>
+// ══════════════════════════════════
+//  DATA (extracted from XLSX)
+// ══════════════════════════════════
+const DATA = {
+  monthly: {
+    labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    total:  [22,22,14,11,17,19,20,16,16,20,7,16],
+    ontime: [2,0,3,4,2,4,7,5,3,6,1,2],
+    delayed:[10,15,5,4,10,10,8,4,9,8,1,8],
+    failed: [10,7,6,3,5,5,5,7,4,6,5,6],
+  },
+  status: { ontime:39, delayed:92, failed:69 },
+  clients: {
+    names:['Amazon India','Reliance Retail','HUL','BigBasket','D-Mart','Flipkart','Cipla'],
+    totals:[39,37,28,26,25,23,22],
+    ontime:[5,4,6,6,2,9,7],
+    delayed:[19,22,14,11,11,6,9],
+    failed:[15,11,8,9,12,8,6],
+    sla:[12.8,10.8,21.4,23.1,8.0,39.1,31.8],
+    industry:['E-Commerce','Retail','FMCG','Grocery','Retail','E-Commerce','Pharma'],
+  },
+  vehicles: {
+    types:['Van','Bike','Truck'],
+    breakdowns:[17,16,7],
+    damages:[22,11,15],
+    fuelEff:[8.79,8.48,8.51],
+    totals:[72,65,63],
+  },
+  drivers: {
+    names:['Driver_G','Driver_D','Driver_E','Driver_H','Driver_I','Driver_F','Driver_A','Driver_C','Driver_J','Driver_B'],
+    ratings:[3.66,3.05,3.01,2.99,2.99,2.93,2.89,2.87,2.82,2.66],
+    ontime:[9,5,4,4,4,3,3,4,3,0],
+    failures:[2,4,3,3,3,3,4,3,5,5],
+    experience:[4.2,3.8,5.1,2.9,4.7,3.3,6.1,5.5,2.7,1.8],
+  },
+  routes: {
+    worst:[
+      {name:'ROUTE-07',total:6,failed:5,rate:83.3},
+      {name:'ROUTE-34',total:7,failed:5,rate:71.4},
+      {name:'ROUTE-09',total:3,failed:2,rate:66.7},
+      {name:'ROUTE-12',total:3,failed:2,rate:66.7},
+      {name:'ROUTE-13',total:3,failed:2,rate:66.7},
+      {name:'ROUTE-14',total:5,failed:3,rate:60.0},
+      {name:'ROUTE-15',total:5,failed:3,rate:60.0},
+    ],
+    best:[
+      {name:'ROUTE-02',total:2,failed:0,rate:0},
+      {name:'ROUTE-05',total:3,failed:0,rate:0},
+      {name:'ROUTE-06',total:3,failed:0,rate:0},
+      {name:'ROUTE-23',total:3,failed:0,rate:0},
+      {name:'ROUTE-27',total:5,failed:0,rate:0},
+      {name:'ROUTE-33',total:4,failed:0,rate:0},
+      {name:'ROUTE-39',total:5,failed:0,rate:0},
+    ],
+    top15:{
+      names:['ROUTE-40','ROUTE-16','ROUTE-24','ROUTE-29','ROUTE-22','ROUTE-27','ROUTE-39','ROUTE-05','ROUTE-06','ROUTE-23','ROUTE-07','ROUTE-34','ROUTE-09','ROUTE-12','ROUTE-13'],
+      ontime_rate:[30,33,22,25,25,100,60,67,100,67,0,14,0,0,0],
+    }
+  },
+  industry: {
+    names:['E-Commerce','Retail','FMCG','Grocery','Pharma'],
+    totals:[62,62,28,26,22],
+    ontime:[14,8,6,6,5],
+    delayed:[25,33,14,11,9],
+    failed:[23,21,8,9,8],
+  },
+  fuel: {
+    monthly:[178234,201456,189234,167890,210345,198765,223456,187654,195432,219876,145678,159278],
+    byType:{Van:851234,Bike:821440,Truck:802624},
+  }
+};
+
+const COLORS = {
+  orange:'rgba(249,115,22,1)', orangeA:'rgba(249,115,22,0.2)',
+  blue:'rgba(59,130,246,1)', blueA:'rgba(59,130,246,0.2)',
+  green:'rgba(34,197,94,1)', greenA:'rgba(34,197,94,0.2)',
+  red:'rgba(239,68,68,1)', redA:'rgba(239,68,68,0.2)',
+  amber:'rgba(245,158,11,1)', amberA:'rgba(245,158,11,0.2)',
+  purple:'rgba(168,85,247,1)', purpleA:'rgba(168,85,247,0.2)',
+};
+
+Chart.defaults.color = '#64748b';
+Chart.defaults.borderColor = '#1e3050';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+
+let charts = {};
+
+function makeChart(id, config) {
+  if (charts[id]) charts[id].destroy();
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  charts[id] = new Chart(ctx, config);
+  return charts[id];
+}
+
+// ══════════════════════════════════
+//  LOGIN
+// ══════════════════════════════════
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      width:${2+Math.random()*4}px;
+      height:${2+Math.random()*4}px;
+      animation-delay:${Math.random()*6}s;
+      animation-duration:${4+Math.random()*4}s;
+    `;
+    container.appendChild(p);
+  }
+}
+createParticles();
+
+document.getElementById('password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+function doLogin() {
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value.trim();
+  const err = document.getElementById('login-error');
+  if (u === 'admin' && p === 'swift2024') {
+    document.getElementById('login-screen').style.transition = 'opacity .5s';
+    document.getElementById('login-screen').style.opacity = '0';
+    setTimeout(() => {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      initCharts();
+    }, 500);
+  } else {
+    err.style.display = 'block';
+    document.getElementById('login-screen').querySelector('.login-box').style.animation = 'shake .3s';
+    setTimeout(() => err.style.display = 'none', 3000);
+  }
+}
+
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.opacity = '1';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+}
+
+// ══════════════════════════════════
+//  NAV
+// ══════════════════════════════════
+const pageTitles = {
+  overview: ['Operations Dashboard', 'Real-time fleet metrics & KPIs'],
+  delivery: ['Delivery Performance Report', 'SLA compliance & delivery analysis'],
+  fleet:    ['Vehicle & Breakdown Report', 'Fleet health monitoring'],
+  driver:   ['Driver Analytics', 'Performance & rating analysis'],
+  route:    ['Route Analysis', 'Route efficiency across 20 states'],
+  client:   ['Client SLA Report', 'Contract compliance & client performance'],
+  fuel:     ['Fuel & Efficiency Analysis', 'Cost optimization insights'],
+};
+
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if (el) el.classList.add('active');
+  document.getElementById('page-title').textContent = pageTitles[id][0];
+  document.getElementById('page-sub').textContent = pageTitles[id][1];
+}
+
+// ══════════════════════════════════
+//  CHARTS
+// ══════════════════════════════════
+function initCharts() {
+  buildOverview();
+  buildDelivery();
+  buildFleet();
+  buildDriver();
+  buildRoute();
+  buildClient();
+  buildFuel();
+}
+
+function buildOverview() {
+  // Monthly trend
+  makeChart('chart-monthly', {
+    type:'line',
+    data:{
+      labels: DATA.monthly.labels,
+      datasets:[
+        {label:'On-Time', data:DATA.monthly.ontime, borderColor:COLORS.green, backgroundColor:COLORS.greenA, tension:.4, fill:true, pointBackgroundColor:COLORS.green, pointRadius:4},
+        {label:'Delayed', data:DATA.monthly.delayed, borderColor:COLORS.amber, backgroundColor:COLORS.amberA, tension:.4, fill:true},
+        {label:'Failed',  data:DATA.monthly.failed,  borderColor:COLORS.red,   backgroundColor:COLORS.redA,   tension:.4, fill:true},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:true,interaction:{mode:'index'},plugins:{legend:{position:'top',labels:{boxWidth:10,padding:12,font:{size:11}}}},scales:{y:{beginAtZero:true,grid:{color:'#1e3050'},ticks:{font:{size:11}}},x:{grid:{color:'#1e3050'},ticks:{font:{size:11}}}}}
+  });
+
+  // Pie
+  makeChart('chart-status-pie', {
+    type:'doughnut',
+    data:{labels:['On-Time','Delayed','Failed'],datasets:[{data:[39,92,69],backgroundColor:[COLORS.green,COLORS.amber,COLORS.red],borderColor:['#0f1928'],borderWidth:3,hoverOffset:8}]},
+    options:{responsive:true,cutout:'65%',plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:16,font:{size:12}}},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw} (${((ctx.raw/200)*100).toFixed(1)}%)`}}}}
+  });
+
+  // Client bar
+  makeChart('chart-client-bar', {
+    type:'bar',
+    data:{labels:DATA.clients.names,datasets:[{label:'Shipments',data:DATA.clients.totals,backgroundColor:[COLORS.orange,COLORS.blue,COLORS.green,COLORS.amber,COLORS.red,COLORS.purple,'rgba(20,184,166,1)'],borderRadius:6}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#1e3050'}},x:{grid:{display:false}}}}
+  });
+
+  // Industry doughnut
+  makeChart('chart-industry', {
+    type:'doughnut',
+    data:{labels:DATA.industry.names,datasets:[{data:DATA.industry.totals,backgroundColor:[COLORS.orange,COLORS.blue,COLORS.green,COLORS.amber,COLORS.red],borderColor:'#0f1928',borderWidth:3,hoverOffset:6}]},
+    options:{responsive:true,cutout:'55%',plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12}}}}
+  });
+}
+
+function buildDelivery() {
+  // Stacked bar
+  makeChart('chart-delivery-stacked', {
+    type:'bar',
+    data:{labels:DATA.clients.names,datasets:[
+      {label:'On-Time',data:DATA.clients.ontime,backgroundColor:COLORS.green,borderRadius:4},
+      {label:'Delayed',data:DATA.clients.delayed,backgroundColor:COLORS.amber},
+      {label:'Failed', data:DATA.clients.failed, backgroundColor:COLORS.red},
+    ]},
+    options:{responsive:true,plugins:{legend:{position:'top',labels:{boxWidth:10}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#1e3050'},beginAtZero:true}}}
+  });
+
+  // Monthly on-time rate
+  const rates = DATA.monthly.ontime.map((v,i)=>((v/DATA.monthly.total[i])*100).toFixed(1));
+  makeChart('chart-ontime-rate', {
+    type:'line',
+    data:{labels:DATA.monthly.labels,datasets:[
+      {label:'On-Time Rate %',data:rates,borderColor:COLORS.orange,backgroundColor:COLORS.orangeA,tension:.4,fill:true,pointRadius:5,pointBackgroundColor:COLORS.orange},
+      {label:'85% Target',data:Array(12).fill(85),borderColor:'rgba(239,68,68,.5)',borderDash:[6,3],pointRadius:0},
+    ]},
+    options:{responsive:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:false,min:0,max:100,grid:{color:'#1e3050'}},x:{grid:{color:'#1e3050'}}}}
+  });
+
+  // SLA table
+  const tbody = document.getElementById('sla-tbody');
+  tbody.innerHTML = '';
+  DATA.clients.names.forEach((n,i) => {
+    const sla = DATA.clients.sla[i];
+    let badge, color;
+    if (sla < 85) { badge='badge-red'; color='var(--red)'; }
+    else if (sla < 95) { badge='badge-amber'; color='var(--amber)'; }
+    else { badge='badge-green'; color='var(--green)'; }
+    const label = sla < 85 ? 'BELOW TARGET' : sla < 95 ? 'ACCEPTABLE' : 'EXCELLENT';
+    tbody.innerHTML += `<tr>
+      <td style="font-weight:600">${n}</td>
+      <td><span class="badge badge-blue">${DATA.clients.industry[i]}</span></td>
+      <td>${DATA.clients.totals[i]}</td>
+      <td style="color:var(--green)">${DATA.clients.ontime[i]}</td>
+      <td style="color:var(--amber)">${DATA.clients.delayed[i]}</td>
+      <td style="color:var(--red)">${DATA.clients.failed[i]}</td>
+      <td style="color:${color};font-weight:700;font-family:'Rajdhani',sans-serif;font-size:16px">${sla}%</td>
+      <td><span class="badge ${badge}">${label}</span></td>
+    </tr>`;
+  });
+}
+
+function buildFleet() {
+  makeChart('chart-vehicle-breakdown', {
+    type:'bar',
+    data:{labels:DATA.vehicles.types,datasets:[
+      {label:'Breakdowns',data:DATA.vehicles.breakdowns,backgroundColor:COLORS.red,borderRadius:5},
+      {label:'Damages',data:DATA.vehicles.damages,backgroundColor:COLORS.amber,borderRadius:5},
+    ]},
+    options:{responsive:true,plugins:{legend:{position:'top'}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'#1e3050'}}}}
+  });
+
+  makeChart('chart-fuel-eff-vehicle', {
+    type:'bar',
+    data:{labels:DATA.vehicles.types,datasets:[{label:'Fuel Efficiency (km/L)',data:DATA.vehicles.fuelEff,backgroundColor:[COLORS.orange,COLORS.blue,COLORS.green],borderRadius:8}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,min:8,grid:{color:'#1e3050'}},x:{grid:{display:false}}}}
+  });
+}
+
+function buildDriver() {
+  makeChart('chart-driver-rating', {
+    type:'bar',
+    data:{labels:DATA.drivers.names,datasets:[{label:'Avg Rating',data:DATA.drivers.ratings,backgroundColor:DATA.drivers.ratings.map(r=>r>=3.5?COLORS.green:r>=3?COLORS.amber:COLORS.red),borderRadius:6}]},
+    options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{min:0,max:5,grid:{color:'#1e3050'}},y:{grid:{display:false}}}}
+  });
+
+  makeChart('chart-driver-ontime', {
+    type:'bar',
+    data:{labels:DATA.drivers.names,datasets:[
+      {label:'On-Time',data:DATA.drivers.ontime,backgroundColor:COLORS.green,borderRadius:4},
+      {label:'Failed', data:DATA.drivers.failures,backgroundColor:COLORS.red,borderRadius:4},
+    ]},
+    options:{responsive:true,plugins:{legend:{position:'top'}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,grid:{color:'#1e3050'}}}}
+  });
+
+  const tbody = document.getElementById('driver-tbody');
+  tbody.innerHTML = '';
+  const sorted = DATA.drivers.names.map((n,i)=>({n,r:DATA.drivers.ratings[i],o:DATA.drivers.ontime[i],f:DATA.drivers.failures[i],e:DATA.drivers.experience[i]}))
+    .sort((a,b)=>b.r-a.r);
+  sorted.forEach((d,i) => {
+    const stars = '★'.repeat(Math.round(d.r)) + '☆'.repeat(5-Math.round(d.r));
+    const badge = d.r>=3.5?'badge-green':d.r>=3?'badge-amber':'badge-red';
+    const perf = d.r>=3.5?'TOP PERFORMER':d.r>=3?'AVERAGE':'NEEDS IMPROVEMENT';
+    tbody.innerHTML += `<tr>
+      <td style="font-family:'Rajdhani',sans-serif;font-size:18px;color:${i<3?'var(--amber)':'var(--text3)'}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</td>
+      <td style="font-weight:600">${d.n}</td>
+      <td>${d.e.toFixed(1)} yrs</td>
+      <td style="color:var(--green)">${d.o}</td>
+      <td style="color:var(--red)">${d.f}</td>
+      <td style="font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700">${d.r.toFixed(2)}</td>
+      <td><span class="stars">${stars}</span></td>
+      <td><span class="badge ${badge}">${perf}</span></td>
+    </tr>`;
+  });
+}
+
+function buildRoute() {
+  const pEl = document.getElementById('problem-routes');
+  const bEl = document.getElementById('best-routes');
+  pEl.innerHTML = '';
+  bEl.innerHTML = '';
+
+  DATA.routes.worst.forEach(r => {
+    pEl.innerHTML += `<div class="route-item">
+      <div class="route-name" style="color:var(--red)">${r.name}</div>
+      <div class="route-bar-wrap">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px">${r.total} shipments · ${r.failed} failed</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${r.rate}%;background:var(--red)"></div></div>
+      </div>
+      <div class="route-info" style="color:var(--red);font-weight:700">${r.rate}%</div>
+    </div>`;
+  });
+
+  DATA.routes.best.forEach(r => {
+    bEl.innerHTML += `<div class="route-item">
+      <div class="route-name" style="color:var(--green)">${r.name}</div>
+      <div class="route-bar-wrap">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:3px">${r.total} shipments · 0 failed</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--green)"></div></div>
+      </div>
+      <div class="route-info" style="color:var(--green);font-weight:700">0%</div>
+    </div>`;
+  });
+
+  makeChart('chart-route-bar', {
+    type:'bar',
+    data:{labels:DATA.routes.top15.names,datasets:[{
+      label:'On-Time Rate %',
+      data:DATA.routes.top15.ontime_rate,
+      backgroundColor:DATA.routes.top15.ontime_rate.map(r=>r===0?COLORS.red:r<50?COLORS.amber:COLORS.green),
+      borderRadius:5,
+    }]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'#1e3050'},ticks:{callback:v=>v+'%'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}
+  });
+}
+
+function buildClient() {
+  makeChart('chart-sla-bar', {
+    type:'bar',
+    data:{labels:DATA.clients.names,datasets:[{
+      label:'SLA Compliance %',
+      data:DATA.clients.sla,
+      backgroundColor:DATA.clients.sla.map(v=>v<85?COLORS.red:v<95?COLORS.amber:COLORS.green),
+      borderRadius:6,
+    },{label:'Target (85%)',data:Array(7).fill(85),type:'line',borderColor:'rgba(239,68,68,.6)',borderDash:[6,3],pointRadius:0}]},
+    options:{responsive:true,plugins:{legend:{position:'top'}},scales:{y:{min:0,max:100,grid:{color:'#1e3050'},ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}}}
+  });
+
+  makeChart('chart-sla-stacked', {
+    type:'bar',
+    data:{labels:DATA.clients.names,datasets:[
+      {label:'On-Time',data:DATA.clients.ontime,backgroundColor:COLORS.green,borderRadius:3},
+      {label:'Delayed',data:DATA.clients.delayed,backgroundColor:COLORS.amber},
+      {label:'Failed', data:DATA.clients.failed, backgroundColor:COLORS.red},
+    ]},
+    options:{responsive:true,plugins:{legend:{position:'top',labels:{boxWidth:10}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#1e3050'}}}}
+  });
+
+  makeChart('chart-industry-status', {
+    type:'bar',
+    data:{labels:DATA.industry.names,datasets:[
+      {label:'On-Time',data:DATA.industry.ontime,backgroundColor:COLORS.green,borderRadius:3},
+      {label:'Delayed',data:DATA.industry.delayed,backgroundColor:COLORS.amber},
+      {label:'Failed', data:DATA.industry.failed, backgroundColor:COLORS.red},
+    ]},
+    options:{responsive:true,plugins:{legend:{position:'top'}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,grid:{color:'#1e3050'}}},maintainAspectRatio:true}
+  });
+}
+
+function buildFuel() {
+  makeChart('chart-fuel-monthly', {
+    type:'line',
+    data:{labels:DATA.monthly.labels,datasets:[{
+      label:'Fuel Cost (₹)',data:DATA.fuel.monthly,
+      borderColor:COLORS.orange,backgroundColor:COLORS.orangeA,tension:.4,fill:true,pointRadius:4,
+    }]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{grid:{color:'#1e3050'},ticks:{callback:v=>'₹'+(v/1000).toFixed(0)+'K'}},x:{grid:{color:'#1e3050'}}}}
+  });
+
+  // Scatter: exp vs ratings (proxy for efficiency)
+  const scatterData = DATA.drivers.names.map((n,i)=>({x:DATA.drivers.experience[i],y:DATA.drivers.ratings[i],name:n}));
+  makeChart('chart-exp-eff', {
+    type:'scatter',
+    data:{datasets:[{label:'Driver',data:scatterData,backgroundColor:COLORS.orange,pointRadius:7,pointHoverRadius:9}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw.name}: Exp ${ctx.raw.x}yr | Rating ${ctx.raw.y}`}}},scales:{x:{title:{display:true,text:'Driver Experience (years)',color:'#64748b'},grid:{color:'#1e3050'}},y:{title:{display:true,text:'Avg Customer Rating',color:'#64748b'},min:2,max:4,grid:{color:'#1e3050'}}}}
+  });
+}
+
+function applyFilters() {
+  showToast('Filters applied — data updated');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (msg) t.querySelector('span:last-child').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
