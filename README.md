@@ -29,8 +29,7 @@ IBM_COGNOS_PROJECT/
 📉 Performance monitoring and reporting
 📦 Integration of multiple data sources
 ⚙️ How It Works
-Import dataset into Cognos Analytics<img width="1364" height="685" alt="image" src="https://github.com/user-attachments/assets/e4b714cc-1276-4ea8-b379-7ce9b1cc7cf8" />
-
+Import dataset into Cognos Analytics
 Create a Data Module to organize and model data
 Build dashboards using visual components
 Perform exploration to identify patterns
@@ -38,9 +37,10 @@ Generate reports and insights
 
 Cognos projects typically involve models, data sources, and packages that simplify report creation and analysis.
 
+📸 Sample Dashboard
 
+<img width="1364" height="685" alt="image" src="https://github.com/user-attachments/assets/281d4f54-14b0-4a12-b5b3-f29911949eca" />
 
-(Add screenshots here from your project)
 
 🚀 Use Cases
 Business performance analysis
@@ -55,4 +55,3 @@ This project showcases how IBM Cognos Analytics can be used to convert raw data 
 
 Mohammed Rasidh
 📎 GitHub: https://github.com/mohd-Rasidh
-
